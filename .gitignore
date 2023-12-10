@@ -1,0 +1,6 @@
+.stack-work/
+*~
+dist-newstyle/
+stack.yaml.lock
+advent-of-code.cabal
+inputs/
