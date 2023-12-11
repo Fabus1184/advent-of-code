@@ -69,7 +69,11 @@ main x = do
   let a = length path - (length path `div` 2)
 
   let pipes' = map (both fromIntegral) (indices grid \\ path) :: [(Double, Double)]
-  let poly = fromPoints $ map (ext . uncurry Point2 . both fromIntegral) path
+  let poly =
+        fromPoints
+          . map (ext . uncurry Point2 . both fromIntegral)
+          . filter (\(a, b) -> pipes !! b !! a `notElem` [NS, EW])
+          $ path
 
   let b = count id $ parMap rseq ((`insidePolygon` poly) . uncurry Point2) pipes'
   pure (a, b)

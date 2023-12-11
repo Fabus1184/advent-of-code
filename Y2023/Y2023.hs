@@ -14,6 +14,7 @@ import qualified Day07
 import qualified Day08
 import qualified Day09
 import qualified Day10
+import qualified Day11
 
 solutions :: [(Int, [String] -> IO (String, String))]
 solutions = $(mkSolutions)
