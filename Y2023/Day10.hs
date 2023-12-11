@@ -1,29 +1,23 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LambdaCase #-}
 
 module Day10 where
 
 import Algorithm.Search (dfs)
+import Control.Parallel.Strategies (parMap, rseq)
 import Data.Bifunctor (bimap)
-import Data.List (find)
-import Data.List.Extra (chunksOf)
+import Data.Ext (ext)
+import Data.Geometry (Point (..))
+import Data.Geometry.Polygon (fromPoints, insidePolygon)
+import Data.List (find, (\\))
 import Data.Maybe (fromJust, mapMaybe)
+import Data.Tuple.Extra (both)
+import GHC.Utils.Misc (count)
 import Math.Geometry.Grid (Grid (indices), neighbours)
 import Math.Geometry.Grid.Square (RectSquareGrid, rectSquareGrid)
 
 data Pipe = Start | NS | EW | NE | NW | SW | SE | None deriving (Eq)
-
-instance Show Pipe where
-  show :: Pipe -> String
-  show = \case
-    NS -> "│"
-    EW -> "─"
-    NE -> "└"
-    NW -> "┘"
-    SW -> "┐"
-    SE -> "┌"
-    Start -> "S"
-    None -> "#"
 
 instance Read Pipe where
   readsPrec :: Int -> ReadS Pipe
@@ -69,22 +63,13 @@ main x = do
   let path =
         head $
           mapMaybe
-            (dfs (\(a, b) -> pipeNeighbors grid pipes (a, b)) (== start))
+            (\s -> (s :) <$> dfs (\(a, b) -> pipeNeighbors grid pipes (a, b)) (== start) s)
             (pipeNeighbors grid pipes start)
 
-  mapM_ (putStrLn . concat)
-    . chunksOf (length x)
-    . map
-      ( \(a, b) ->
-          ( if (a, b) `elem` path
-              then (\x -> "\ESC[32m" <> x <> "\ESC[39;49m")
-              else id
-          )
-            (show $ pipes !! b !! a)
-      )
-    $ [(a, b) | b <- [0 .. length x - 1], a <- [0 .. length (head x) - 1]]
-
-  print start
-
   let a = length path - (length path `div` 2)
-  pure (a, 0)
+
+  let pipes' = map (both fromIntegral) (indices grid \\ path) :: [(Double, Double)]
+  let poly = fromPoints $ map (ext . uncurry Point2 . both fromIntegral) path
+
+  let b = count id $ parMap rseq ((`insidePolygon` poly) . uncurry Point2) pipes'
+  pure (a, b)

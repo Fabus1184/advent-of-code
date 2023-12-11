@@ -40,17 +40,13 @@ executables:
       - Y2023
 
 internal-libraries:
-  TH:
-    source-dirs: TH
-    dependencies:
-      - template-haskell
-      - extra
-      - formatting
-
   Y2023:
     source-dirs: Y2023
     dependencies:
-      - TH
+      - template-haskell
+      - ghc
+      - extra
+      - formatting
       - generic-data
       - text
       - extra
@@ -66,3 +62,6 @@ internal-libraries:
       - search-algorithms
       - transformers
       - hgeometry
+      - hgeometry-combinatorial
+    ghc-options:
+      - -O2

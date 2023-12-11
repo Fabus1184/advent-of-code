@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Main (main) where
 
 import Advent (AoC (AoCInput), AoCOpts (..), mkDay, runAoC_)
