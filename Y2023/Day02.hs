@@ -4,7 +4,7 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Day02 where
+module Day02 (main) where
 
 import Control.Applicative (liftA2)
 import Control.Arrow ((&&&))

@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Day03 where
+module Day03 (main) where
 
 import Control.Arrow ((&&&))
 import Control.Lens (imap)

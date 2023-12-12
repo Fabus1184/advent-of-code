@@ -2,7 +2,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Day10 where
+module Day10 (main) where
 
 import Algorithm.Search (dfs)
 import Control.Parallel.Strategies (parMap, rseq)
@@ -31,8 +31,6 @@ instance Read Pipe where
     ('.' : xs) -> [(None, xs)]
     ('S' : xs) -> [(Start, xs)]
     _ -> []
-
-data Node = Node (Int, Int) Pipe
 
 pipeNeighbors :: RectSquareGrid -> [[Pipe]] -> (Int, Int) -> [(Int, Int)]
 pipeNeighbors grid pipes (a, b) =
@@ -72,7 +70,7 @@ main x = do
   let poly =
         fromPoints
           . map (ext . uncurry Point2 . both fromIntegral)
-          . filter (\(a, b) -> pipes !! b !! a `notElem` [NS, EW])
+          . filter (\(i, j) -> pipes !! j !! i `notElem` [NS, EW])
           $ path
 
   let b = count id $ parMap rseq ((`insidePolygon` poly) . uncurry Point2) pipes'

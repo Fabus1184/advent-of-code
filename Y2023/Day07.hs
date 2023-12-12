@@ -5,7 +5,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Day07 where
+module Day07 (main) where
 
 import Control.Arrow (first, (&&&))
 import Control.Lens (FunctorWithIndex (imap))

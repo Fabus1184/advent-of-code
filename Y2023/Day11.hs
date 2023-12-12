@@ -1,6 +1,6 @@
 {-# LANGUAGE NumericUnderscores #-}
 
-module Day11 where
+module Day11 (main) where
 
 import Control.Arrow ((&&&))
 import Control.Monad (replicateM)

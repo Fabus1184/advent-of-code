@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Day06 where
+module Day06 (main) where
 
 import Data.Bifunctor (bimap)
 import Data.List.Extra (uncons)

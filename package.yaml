@@ -34,6 +34,9 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
       - -O2
+      - -Wno-incomplete-patterns
+      - -Wno-incomplete-uni-patterns
+      - -Wno-orphans
     dependencies:
       - advent-of-code-api
       - text
@@ -45,13 +48,18 @@ internal-libraries:
     dependencies:
       - template-haskell
       - ghc
+      - ghc-prim
       - extra
       - formatting
       - generic-data
       - text
+      - bytestring
       - extra
       - parsec
+      - parsec-numeric
       - containers
+      - hashable
+      - unordered-containers
       - composition-extra
       - lens
       - grid
@@ -63,5 +71,6 @@ internal-libraries:
       - transformers
       - hgeometry
       - hgeometry-combinatorial
+      - memoize
     ghc-options:
       - -O2

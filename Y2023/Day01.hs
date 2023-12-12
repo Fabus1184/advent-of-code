@@ -1,4 +1,4 @@
-module Day01 where
+module Day01 (main) where
 
 import Control.Applicative (liftA2)
 import Data.Char (digitToInt, isDigit)

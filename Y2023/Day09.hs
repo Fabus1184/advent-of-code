@@ -1,4 +1,4 @@
-module Day09 where
+module Day09 (main) where
 
 import Data.List.Extra (sumOn')
 import Data.Tuple.Extra (both, swap)

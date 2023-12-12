@@ -1,4 +1,4 @@
-module Day05 where
+module Day05 (main) where
 
 import Control.Parallel.Strategies (parMap, rpar)
 import Data.Bifunctor (bimap)

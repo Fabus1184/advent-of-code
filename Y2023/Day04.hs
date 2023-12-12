@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Day04 where
+module Day04 (main) where
 
 import Control.Arrow ((&&&))
 import Data.List.Extra (intersect, sumOn')
