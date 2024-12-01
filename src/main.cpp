@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <format>
 #include <iostream>
@@ -152,7 +153,7 @@ std::int32_t main(std::int32_t argc, char** argv) {
     std::string token{token_ptr};
 
     const constexpr std::size_t YEAR = 2024;
-    const Aoc<YEAR> aoc(std::move(token));
+    Aoc<YEAR> aoc(std::move(token));
 
     std::visit(
         [&](const auto& arg) {
@@ -173,9 +174,12 @@ std::int32_t main(std::int32_t argc, char** argv) {
                 },
                 command.part());
 
+            const auto now = std::chrono::high_resolution_clock::now();
             const std::string result = func(std::move(input));
+            const auto end = std::chrono::high_resolution_clock::now();
 
-            std::cout << std::format("Day {} Part {}: {}", command.day(), command.part_number(), result) << std::endl;
+            std::cout << std::format("Day {} Part {}: {} (took {}ms)\n", command.day(), command.part_number(), result,
+                                     std::chrono::duration_cast<std::chrono::milliseconds>(end - now).count());
 
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, RunDay>) {

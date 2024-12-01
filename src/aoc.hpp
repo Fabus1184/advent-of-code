@@ -6,9 +6,12 @@ namespace curl {
 }
 
 #include <cstddef>
+#include <filesystem>
 #include <format>
+#include <fstream>
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <variant>
 
@@ -44,35 +47,62 @@ class Aoc {
     const std::string token;
     curl::CURL* curl;
 
+    std::unordered_map<std::uint8_t, std::string> inputs;
+
    public:
     Aoc(const std::string&& token) : token(token), curl(curl::curl_easy_init()) {
         if (!curl) {
             throw std::runtime_error("Failed to initialize curl");
         }
+
+        std::unordered_map<std::uint8_t, std::string> inputs;
+
+        std::filesystem::path cache_dir{"aoc-cache"};
+        if (std::filesystem::exists(cache_dir) && std::filesystem::is_directory(cache_dir)) {
+            for (const auto& entry : std::filesystem::directory_iterator(cache_dir)) {
+                if (entry.is_regular_file()) {
+                    std::ifstream cache{entry.path()};
+                    if (cache.is_open()) {
+                        std::uint8_t day;
+                        std::string input;
+                        cache >> day >> input;
+                        inputs[day] = input;
+                    } else {
+                        throw std::runtime_error("Failed to open cache file");
+                    }
+                }
+            }
+        }
     }
 
-    ~Aoc() { curl::curl_easy_cleanup(curl); }
+    ~Aoc() noexcept(false) {
+        curl::curl_easy_cleanup(curl);
 
-    std::string get_input(const std::uint8_t day) const {
-        curl::curl_easy_setopt(curl, curl::CURLOPT_URL,
-                               std::format("https://adventofcode.com/{}/day/{}/input", Year, day).c_str());
-        curl::curl_easy_setopt(curl, curl::CURLOPT_COOKIE, std::format("session={}", token).c_str());
-
-        std::string input;
-        curl::curl_easy_setopt(curl, curl::CURLOPT_WRITEDATA, &input);
-        curl::curl_easy_setopt(curl, curl::CURLOPT_WRITEFUNCTION, write_string_callback);
-
-        CURL_CHECK(curl::curl_easy_perform(curl), "Failed to get input ❌");
-
-        std::uint64_t response_code;
-        CURL_CHECK(curl::curl_easy_getinfo(curl, curl::CURLINFO_RESPONSE_CODE, &response_code),
-                   "Failed to get response code ❌");
-
-        if (response_code != 200) {
-            throw std::runtime_error(std::format("Failed to get input ❌\n-> {}\n-> {}", response_code, input));
+        std::filesystem::path cache_dir{"aoc-cache"};
+        if (!std::filesystem::exists(cache_dir)) {
+            std::filesystem::create_directory(cache_dir);
         }
 
-        return input;
+        for (const auto& [day, input] : inputs) {
+            std::filesystem::path cache_file = cache_dir / std::format("day-{}.txt", day);
+            std::ofstream cache{cache_file};
+            if (cache.is_open()) {
+                cache << day << '\n' << input;
+            } else {
+                throw std::runtime_error("Failed to open cache file");
+            }
+        }
+    }
+
+    std::string get_input(const std::uint8_t day) {
+        if (inputs.contains(day)) {
+            return inputs.at(day);
+        } else {
+            std::string input = curl_get_input(day);
+            inputs[day] = input;
+
+            return input;
+        }
     }
 
     std::string submit(const std::uint8_t day, const std::uint8_t part, const std::string& answer) const {
@@ -104,5 +134,28 @@ class Aoc {
         curl::curl_slist_free_all(headers);
 
         return response;
+    }
+
+   private:
+    std::string curl_get_input(const std::uint8_t day) const {
+        curl::curl_easy_setopt(curl, curl::CURLOPT_URL,
+                               std::format("https://adventofcode.com/{}/day/{}/input", Year, day).c_str());
+        curl::curl_easy_setopt(curl, curl::CURLOPT_COOKIE, std::format("session={}", token).c_str());
+
+        std::string input;
+        curl::curl_easy_setopt(curl, curl::CURLOPT_WRITEDATA, &input);
+        curl::curl_easy_setopt(curl, curl::CURLOPT_WRITEFUNCTION, write_string_callback);
+
+        CURL_CHECK(curl::curl_easy_perform(curl), "Failed to get input ❌");
+
+        std::uint64_t response_code;
+        CURL_CHECK(curl::curl_easy_getinfo(curl, curl::CURLINFO_RESPONSE_CODE, &response_code),
+                   "Failed to get response code ❌");
+
+        if (response_code != 200) {
+            throw std::runtime_error(std::format("Failed to get input ❌\n-> {}\n-> {}", response_code, input));
+        }
+
+        return input;
     }
 };
