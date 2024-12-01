@@ -1,0 +1,5 @@
+BasedOnStyle: Google
+IndentWidth: 4
+FixNamespaceComments: false
+ColumnLimit: 120
+BreakBinaryOperations: OnePerLine
