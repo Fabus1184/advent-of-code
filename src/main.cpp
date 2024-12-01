@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -14,66 +15,130 @@
 #include "1.hpp"
 #include "aoc.hpp"
 
-enum class Part {
-    ONE = 1,
-    TWO = 2,
-};
+struct Part1 {};
+struct Part2 {};
 
 struct RunDay {
-    std::optional<Part> part;
+    std::variant<Part1, Part2> part;
     std::uint8_t day;
 };
 
 struct SubmitDay {
-    Part part;
+    std::variant<Part1, Part2> part;
     std::uint8_t day;
 };
 
 struct Command {
     std::variant<RunDay, SubmitDay> command;
 
-    // run <day> <part (optional)>
+    // run <day> <part>
     // submit <day> <part>
     static Command parse(const std::vector<std::string>& args) {
-        if (args.size() < 2) {
+        if (args.size() < 3) {
             throw std::runtime_error("Invalid number of arguments");
         }
 
-        if (args[1] == "run") {
-            if (args.size() < 3) {
-                throw std::runtime_error("Invalid number of arguments");
-            }
+        uint8_t day = std::stoul(args[2]);
+        if (day < 1 || day > 25) {
+            throw std::runtime_error(std::format("Invalid day: {}", day));
+        }
 
-            std::uint8_t day = std::stoul(args[2]);
-
-            if (args.size() == 4) {
-                std::uint8_t part = std::stoul(args[3]);
-                return Command{RunDay{Part(part), day}};
-            } else {
-                return Command{RunDay{std::nullopt, day}};
-            }
-        } else if (args[1] == "submit") {
+        auto part = [&]() -> std::variant<Part1, Part2> {
             if (args.size() < 4) {
                 throw std::runtime_error("Invalid number of arguments");
             }
 
-            std::uint8_t day = std::stoul(args[2]);
-            std::uint8_t part = std::stoul(args[3]);
+            if (args[3] == "1") {
+                return Part1{};
+            } else if (args[3] == "2") {
+                return Part2{};
+            } else {
+                throw std::runtime_error(std::format("Invalid part: {}", args[3]));
+            }
+        }();
 
-            return Command{SubmitDay{Part(part), day}};
+        if (args[1] == "run") {
+            return Command{RunDay{part, day}};
+        } else if (args[1] == "submit") {
+            return Command{SubmitDay{part, day}};
         } else {
-            throw std::runtime_error("Invalid command");
+            throw std::runtime_error(std::format("Invalid command: {}", args[1]));
         }
+    }
+
+    uint8_t day() const {
+        return std::visit(
+            [](const auto& arg) -> uint8_t {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, RunDay>) {
+                    return arg.day;
+                } else if constexpr (std::is_same_v<T, SubmitDay>) {
+                    return arg.day;
+                } else {
+                    static_assert(false, "non-exhaustive visitor");
+                }
+            },
+            command);
+    }
+
+    std::variant<Part1, Part2> part() const {
+        return std::visit(
+            [](const auto& arg) -> std::variant<Part1, Part2> {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, RunDay>) {
+                    return arg.part;
+                } else if constexpr (std::is_same_v<T, SubmitDay>) {
+                    return arg.part;
+                } else {
+                    static_assert(false, "non-exhaustive visitor");
+                }
+            },
+            command);
+    }
+
+    size_t part_number() const {
+        return std::visit(
+            [](const auto& arg) -> size_t {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, Part1>) {
+                    return 1;
+                } else if constexpr (std::is_same_v<T, Part2>) {
+                    return 2;
+                } else {
+                    static_assert(false, "non-exhaustive visitor");
+                }
+            },
+            part());
     }
 };
 
-const constexpr std::size_t YEAR = 2024;
+template <auto Start, auto End, class F>
+constexpr void constexpr_for(F&& f) {
+    if constexpr (Start < End) {
+        f(std::integral_constant<decltype(Start), Start>());
+        constexpr_for<Start + 1, End>(f);
+    }
+}
 
-using AocFunction = std::function<std::string(const std::string&&)>;
+template <class T, std::size_t = sizeof(T)>
+std::true_type is_complete_impl(T*);
+std::false_type is_complete_impl(...);
+template <class T>
+using is_complete_type = decltype(is_complete_impl(std::declval<T*>()));
 
-const std::unordered_map<std::uint8_t, std::tuple<AocFunction, AocFunction>> AOC_MAP{
-    {1, {Day1::problem1, Day1::problem2}},
-};
+const std::array<std::optional<std::tuple<AocFunction, AocFunction>>, 24> SOLUTIONS = []() {
+    std::array<std::optional<std::tuple<AocFunction, AocFunction>>, 24> solutions{};
+
+    constexpr_for<1, 25>([&](auto day) {
+        constexpr std::uint8_t Day = decltype(day)::value;
+
+        if constexpr (is_complete_type<Solution<Day>>::value) {
+            solutions[Day - 1] = std::make_tuple(Solution<Day>::part1, Solution<Day>::part2);
+        }
+    });
+
+    return solutions;
+}();
 
 std::int32_t main(std::int32_t argc, char** argv) {
     const std::vector<std::string> args(&argv[0], &argv[argc]);
@@ -86,41 +151,41 @@ std::int32_t main(std::int32_t argc, char** argv) {
     }
     std::string token{token_ptr};
 
+    const constexpr std::size_t YEAR = 2024;
+    const Aoc<YEAR> aoc(std::move(token));
+
     std::visit(
-        [token](const auto& arg) {
+        [&](const auto& arg) {
+            const auto& parts = SOLUTIONS.at(command.day() - 1);
+            if (!parts.has_value()) {
+                throw std::runtime_error(std::format("Day {} not implemented", command.day()));
+            }
+
+            const std::string input = aoc.get_input(command.day());
+
+            const auto func = std::visit(
+                [&](const auto& part) -> AocFunction {
+                    using T = std::decay_t<decltype(part)>;
+                    if constexpr (std::is_same_v<T, Part1>) {
+                        return std::get<0>(*parts);
+                    } else if constexpr (std::is_same_v<T, Part2>) {
+                        return std::get<1>(*parts);
+                    } else {
+                        static_assert(false, "non-exhaustive visitor");
+                    }
+                },
+                command.part());
+
+            const std::string result = func(std::move(input));
+
+            std::cout << std::format("Day {} Part {}: {}", command.day(), command.part_number(), result) << std::endl;
+
             using T = std::decay_t<decltype(arg)>;
             if constexpr (std::is_same_v<T, RunDay>) {
-                const RunDay& runDay = arg;
-
-                const std::vector<std::tuple<Part, AocFunction>> functions = [&]() {
-                    const auto [part1, part2] = AOC_MAP.at(runDay.day);
-                    if (auto part = runDay.part) {
-                        if (*part == Part::ONE) {
-                            return std::vector{std::make_tuple(Part::ONE, part1)};
-                        } else {
-                            return std::vector{std::make_tuple(Part::TWO, part2)};
-                        }
-                    } else {
-                        return std::vector{std::make_tuple(Part::ONE, part1), std::make_tuple(Part::TWO, part2)};
-                    }
-                }();
-
-                const Aoc<YEAR> aoc(runDay.day, std::move(token));
-                const std::string input = aoc.get_input();
-
-                std::for_each(functions.begin(), functions.end(), [&](auto arg) {
-                    const auto [part, function] = arg;
-
-                    const std::string result = function(std::move(input));
-
-                    std::cout << std::format("Day {}, Part {}: {}\n", runDay.day, part == Part::ONE ? 1 : 2, result);
-                });
-
+                // do nothing
             } else if constexpr (std::is_same_v<T, SubmitDay>) {
-                const SubmitDay& submitDay = arg;
-                const Aoc<YEAR> aoc(submitDay.day, std::move(token));
-
-                const std::string input = aoc.get_input();
+                const auto response = aoc.submit(command.day(), command.part_number(), result);
+                // std::cout << response << std::endl;
             } else {
                 static_assert(false, "non-exhaustive visitor");
             }
