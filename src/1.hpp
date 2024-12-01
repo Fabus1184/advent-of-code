@@ -22,11 +22,8 @@ std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>> parse_input(c
                                        line | std::ranges::views::split(' ') |
                                        std::ranges::views::filter([](const auto& x) { return !x.empty(); }));
                                })) {
-        std::uint32_t a = std::stoul(numbers[0]);
-        std::uint32_t b = std::stoul(numbers[1]);
-
-        lefts.emplace_back(a);
-        rights.emplace_back(b);
+        lefts.emplace_back(std::stoul(numbers[0]));
+        rights.emplace_back(std::stoul(numbers[1]));
     }
 
     std::sort(lefts.begin(), lefts.end());

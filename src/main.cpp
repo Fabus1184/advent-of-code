@@ -121,6 +121,8 @@ std::int32_t main(std::int32_t argc, char** argv) {
                 const Aoc<YEAR> aoc(submitDay.day, std::move(token));
 
                 const std::string input = aoc.get_input();
+            } else {
+                static_assert(false, "non-exhaustive visitor");
             }
         },
         command.command);
