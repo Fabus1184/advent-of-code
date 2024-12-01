@@ -126,14 +126,14 @@ std::false_type is_complete_impl(...);
 template <class T>
 using is_complete_type = decltype(is_complete_impl(std::declval<T*>()));
 
-const std::array<std::optional<std::tuple<AocFunction, AocFunction>>, 24> SOLUTIONS = []() {
-    std::array<std::optional<std::tuple<AocFunction, AocFunction>>, 24> solutions{};
+const auto SOLUTIONS = []() {
+    std::unordered_map<std::uint8_t, std::tuple<AocFunction, AocFunction>> solutions{};
 
     constexpr_for<1, 25>([&](auto day) {
         constexpr std::uint8_t Day = decltype(day)::value;
 
         if constexpr (is_complete_type<Solution<Day>>::value) {
-            solutions[Day - 1] = std::make_tuple(Solution<Day>::part1, Solution<Day>::part2);
+            solutions[Day] = std::make_tuple(Solution<Day>::part1, Solution<Day>::part2);
         }
     });
 
@@ -156,10 +156,7 @@ std::int32_t main(std::int32_t argc, char** argv) {
 
     std::visit(
         [&](const auto& arg) {
-            const auto& parts = SOLUTIONS.at(command.day() - 1);
-            if (!parts.has_value()) {
-                throw std::runtime_error(std::format("Day {} not implemented", command.day()));
-            }
+            const auto& parts = SOLUTIONS.at(command.day());
 
             const std::string input = aoc.get_input(command.day());
 
@@ -167,9 +164,9 @@ std::int32_t main(std::int32_t argc, char** argv) {
                 [&](const auto& part) -> AocFunction {
                     using T = std::decay_t<decltype(part)>;
                     if constexpr (std::is_same_v<T, Part1>) {
-                        return std::get<0>(*parts);
+                        return std::get<0>(parts);
                     } else if constexpr (std::is_same_v<T, Part2>) {
-                        return std::get<1>(*parts);
+                        return std::get<1>(parts);
                     } else {
                         static_assert(false, "non-exhaustive visitor");
                     }
