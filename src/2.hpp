@@ -29,8 +29,7 @@ struct Solution<2> {
         return std::ranges::to<std::vector<std::vector<std::int32_t>>>(lines);
     }
 
-    template <std::ranges::range R>
-    static bool safe(const R& levels) {
+    static bool safe(const std::vector<std::int32_t>& levels) {
         auto diff = [](const auto& x) {
             auto diff = std::abs(x[0] - x[1]);
             return diff < 1 || diff > 3;
@@ -41,15 +40,6 @@ struct Solution<2> {
 
     static std::string part1(const std::string&& input) {
         auto parsed_input = parse_input(std::move(input));
-
-        auto safe = [](const auto& levels) {
-            auto diff = [](const auto& x) {
-                auto diff = std::abs(x[0] - x[1]);
-                return diff < 1 || diff > 3;
-            };
-            return (std::ranges::is_sorted(levels, std::less{}) || std::ranges::is_sorted(levels, std::greater{})) &&
-                   std::ranges::count_if(levels | std::ranges::views::slide(2), diff) == 0;
-        };
 
         auto count = std::ranges::count_if(parsed_input, safe);
 
