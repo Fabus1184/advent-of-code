@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "1.hpp"
+#include "2.hpp"
 #include "aoc.hpp"
 
 struct Part1 {};

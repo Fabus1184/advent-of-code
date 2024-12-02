@@ -11,6 +11,7 @@ namespace curl {
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <print>
 #include <sstream>
 #include <string>
 #include <variant>
@@ -61,18 +62,30 @@ class Aoc {
         if (std::filesystem::exists(cache_dir) && std::filesystem::is_directory(cache_dir)) {
             for (const auto& entry : std::filesystem::directory_iterator(cache_dir)) {
                 if (entry.is_regular_file()) {
-                    std::ifstream cache{entry.path()};
-                    if (cache.is_open()) {
+                    std::ifstream file{entry.path()};
+                    if (file.is_open()) {
                         std::uint8_t day;
                         std::string input;
-                        cache >> day >> input;
-                        inputs[day] = input;
+
+                        file >> day;
+                        file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                        std::stringstream ss;
+                        ss << file.rdbuf();
+                        input = ss.str();
+
                     } else {
                         throw std::runtime_error("Failed to open cache file");
                     }
                 }
             }
         }
+
+        for (const auto& [day, input] : inputs) {
+            std::println("loaded day {} from cache ({} bytes)", day, input.size());
+        }
+
+        this->inputs = inputs;
     }
 
     ~Aoc() noexcept(false) {
