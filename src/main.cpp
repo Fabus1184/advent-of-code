@@ -129,8 +129,10 @@ std::false_type is_complete_impl(...);
 template <class T>
 using is_complete_type = decltype(is_complete_impl(std::declval<T*>()));
 
+using F = std::function<std::string(const std::string&)>;
+
 const auto SOLUTIONS = []() {
-    std::unordered_map<std::uint8_t, std::tuple<AocFunction, AocFunction>> solutions{};
+    std::unordered_map<std::uint8_t, std::tuple<F, F>> solutions{};
 
     constexpr_for<1, 25>([&](auto day) {
         constexpr std::uint8_t Day = decltype(day)::value;
@@ -138,7 +140,8 @@ const auto SOLUTIONS = []() {
         if constexpr (is_complete_type<Solution<Day>>::value) {
             auto part1 = Solution<Day>::part1;
             auto part2 = Solution<Day>::part2;
-            solutions.emplace(Day, std::tuple(part1, part2));
+            solutions.emplace(Day, std::tuple([part1](const auto input) { return std::format("{}", part1(input)); },
+                                              [part2](const auto input) { return std::format("{}", part2(input)); }));
         }
     });
 
@@ -165,8 +168,8 @@ std::int32_t main(std::int32_t argc, char** argv) {
 
             const std::string input = aoc.get_input(command.day());
 
-            const AocFunction& func = std::visit(
-                [&](const auto& part) -> const AocFunction& {
+            const F& func = std::visit(
+                [&](const auto& part) -> F {
                     using T = std::decay_t<decltype(part)>;
                     if constexpr (std::is_same_v<T, Part1>) {
                         return std::get<0>(parts);

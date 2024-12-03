@@ -16,13 +16,11 @@
 template <>
 struct Solution<2> {
     static std::vector<std::vector<std::int32_t>> parse_input(const std::string& input) {
-        auto lines = input | std::ranges::views::split('\n') |
-                     std::ranges::views::filter([](const auto& x) { return !x.empty(); }) |
-                     std::ranges::views::transform([](const auto& line) {
-                         auto numbers =
-                             line | std::ranges::views::split(' ') |
-                             std::ranges::views::filter([](const auto& x) { return !x.empty(); }) |
-                             std::ranges::views::transform([](const auto& x) { return std::stoi(x.data()); });
+        auto lines = input | std::views::split('\n') | std::views::filter([](const auto& x) { return !x.empty(); }) |
+                     std::views::transform([](const auto& line) {
+                         auto numbers = line | std::views::split(' ') |
+                                        std::views::filter([](const auto& x) { return !x.empty(); }) |
+                                        std::views::transform([](const auto& x) { return std::stoi(x.data()); });
                          return std::ranges::to<std::vector<std::int32_t>>(numbers);
                      });
 
@@ -35,7 +33,7 @@ struct Solution<2> {
             return diff < 1 || diff > 3;
         };
         return (std::ranges::is_sorted(levels, std::less{}) || std::ranges::is_sorted(levels, std::greater{})) &&
-               std::ranges::count_if(levels | std::ranges::views::slide(2), diff) == 0;
+               std::ranges::count_if(levels | std::views::slide(2), diff) == 0;
     }
 
     static auto part1(const std::string& input) {

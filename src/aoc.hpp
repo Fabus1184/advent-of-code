@@ -16,7 +16,8 @@ namespace curl {
 #include <string>
 #include <variant>
 
-using AocFunction = std::function<int64_t(const std::string&)>;
+template <std::formattable<char> T>
+using AocFunction = std::function<T(const std::string&)>;
 
 template <std::uint8_t Day>
 struct Solution;
