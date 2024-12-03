@@ -16,6 +16,11 @@ namespace curl {
 #include <string>
 #include <variant>
 
+using AocFunction = std::function<int64_t(const std::string&)>;
+
+template <std::uint8_t Day>
+struct Solution;
+
 #define CURL_CHECK(expr, message, ...)                                                                              \
     do {                                                                                                            \
         curl::CURLcode res = (expr);                                                                                \
@@ -24,11 +29,6 @@ namespace curl {
                 std::format("curl error: {}: " message, curl::curl_easy_strerror(res) __VA_OPT__(, ) __VA_ARGS__)); \
         }                                                                                                           \
     } while (0)
-
-using AocFunction = std::function<std::string(const std::string&&)>;
-
-template <std::uint8_t Day>
-struct Solution;
 
 std::size_t write_string_callback(char* data, std::size_t size, std::size_t nmemb, void* userp) {
     std::string* str = static_cast<std::string*>(userp);
@@ -118,7 +118,8 @@ class Aoc {
         }
     }
 
-    std::string submit(const std::uint8_t day, const std::uint8_t part, const std::string& answer) const {
+    template <std::formattable<char> T>
+    std::string submit(const std::uint8_t day, const std::uint8_t part, const T& answer) const {
         struct curl::curl_slist* headers = nullptr;
         headers = curl::curl_slist_append(headers, "Accept: text/plain");
         curl::curl_easy_setopt(curl, curl::CURLOPT_HTTPHEADER, headers);

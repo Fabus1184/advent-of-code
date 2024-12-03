@@ -15,7 +15,7 @@
 
 template <>
 struct Solution<2> {
-    static std::vector<std::vector<std::int32_t>> parse_input(const std::string&& input) {
+    static std::vector<std::vector<std::int32_t>> parse_input(const std::string& input) {
         auto lines = input | std::ranges::views::split('\n') |
                      std::ranges::views::filter([](const auto& x) { return !x.empty(); }) |
                      std::ranges::views::transform([](const auto& line) {
@@ -38,15 +38,13 @@ struct Solution<2> {
                std::ranges::count_if(levels | std::ranges::views::slide(2), diff) == 0;
     }
 
-    static std::string part1(const std::string&& input) {
+    static auto part1(const std::string& input) {
         auto parsed_input = parse_input(std::move(input));
 
-        auto count = std::ranges::count_if(parsed_input, safe);
-
-        return std::to_string(count);
+        return std::ranges::count_if(parsed_input, safe);
     }
 
-    static std::string part2(const std::string&& input) {
+    static auto part2(const std::string& input) {
         auto parsed_input = parse_input(std::move(input));
 
         auto any_safe = [](const auto& levels) {
@@ -60,8 +58,6 @@ struct Solution<2> {
             return safe(levels) || std::ranges::count_if(std::views::iota(0u, levels.size()), safe_without_i) > 0;
         };
 
-        auto count = std::ranges::count_if(parsed_input, any_safe);
-
-        return std::to_string(count);
+        return std::ranges::count_if(parsed_input, any_safe);
     }
 };

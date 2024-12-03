@@ -15,6 +15,7 @@
 
 #include "1.hpp"
 #include "2.hpp"
+#include "3.hpp"
 #include "aoc.hpp"
 
 struct Part1 {};
@@ -135,7 +136,9 @@ const auto SOLUTIONS = []() {
         constexpr std::uint8_t Day = decltype(day)::value;
 
         if constexpr (is_complete_type<Solution<Day>>::value) {
-            solutions[Day] = std::make_tuple(Solution<Day>::part1, Solution<Day>::part2);
+            auto part1 = Solution<Day>::part1;
+            auto part2 = Solution<Day>::part2;
+            solutions.emplace(Day, std::tuple(part1, part2));
         }
     });
 
@@ -162,8 +165,8 @@ std::int32_t main(std::int32_t argc, char** argv) {
 
             const std::string input = aoc.get_input(command.day());
 
-            const auto func = std::visit(
-                [&](const auto& part) -> AocFunction {
+            const AocFunction& func = std::visit(
+                [&](const auto& part) -> const AocFunction& {
                     using T = std::decay_t<decltype(part)>;
                     if constexpr (std::is_same_v<T, Part1>) {
                         return std::get<0>(parts);
@@ -176,7 +179,7 @@ std::int32_t main(std::int32_t argc, char** argv) {
                 command.part());
 
             const auto now = std::chrono::high_resolution_clock::now();
-            const std::string result = func(std::move(input));
+            const auto result = func(input);
             const auto end = std::chrono::high_resolution_clock::now();
 
             std::cout << std::format("Day {} Part {}: {} (took {}ms)\n", command.day(), command.part_number(), result,
