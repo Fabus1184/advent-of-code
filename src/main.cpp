@@ -16,6 +16,7 @@
 #include "1.hpp"
 #include "2.hpp"
 #include "3.hpp"
+#include "4.hpp"
 #include "aoc.hpp"
 
 struct Part1 {};
