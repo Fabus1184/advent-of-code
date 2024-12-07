@@ -16,6 +16,11 @@ const DAYS = .{
     .{ .day = 5, .part1 = d5.part1, .part2 = d5.part2 },
 };
 
+const ANSII_RESET = "\x1b[0m";
+const ANSII_CURSIVE = "\x1b[3m";
+const ANSII_BOLD = "\x1b[1m";
+const ANSII_GREEN = "\x1b[32m";
+
 // ./exe run <day> <part>
 // ./exe submit <day> <part>
 pub fn main() !void {
@@ -54,24 +59,26 @@ pub fn main() !void {
     const input = try client.getProblemInput(day);
 
     if (std.mem.eql(u8, command, "run")) {
-        inline for (DAYS) |d| {
+        const now = std.time.microTimestamp();
+
+        const answer = inline for (DAYS) |d| {
             if (d.day == day) {
                 if (part == 1) {
-                    const output = try d.part1(input, allocator);
-                    std.debug.print("{any}\n", .{output});
-                    break;
+                    break try d.part1(input, allocator);
                 } else if (part == 2) {
-                    const output = try d.part2(input, allocator);
-                    std.debug.print("{any}\n", .{output});
-                    break;
+                    break try d.part2(input, allocator);
                 } else {
                     std.debug.panic("Invalid part: {d}\n", .{part});
-                    break;
                 }
             }
         } else {
             std.debug.panic("Unknown day: {d}\n", .{day});
-        }
+        };
+
+        std.debug.print("🎄 {s}Day {d} Part {d}{s}: {s}{d}{s}\n", .{ ANSII_CURSIVE, day, part, ANSII_RESET, ANSII_BOLD ++ ANSII_GREEN, answer, ANSII_RESET });
+
+        const elapsed = std.time.microTimestamp() - now;
+        std.debug.print("took: {d:.3}ms\n", .{@as(f32, @floatFromInt(elapsed)) / 1000.0});
     } else if (std.mem.eql(u8, command, "submit")) {
         std.debug.panic("Not implemented\n", .{});
     } else {
