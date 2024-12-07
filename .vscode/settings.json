@@ -1,0 +1,4 @@
+{
+    "zig.zls.enabled": "on",
+    "editor.defaultFormatter": "bwork.zig-tools"
+}

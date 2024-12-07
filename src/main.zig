@@ -5,13 +5,19 @@ const aoc = @import("aoc.zig");
 const d1 = @import("1.zig");
 const d2 = @import("2.zig");
 const d3 = @import("3.zig");
+const d4 = @import("4.zig");
+const d5 = @import("5.zig");
 
 const DAYS = .{
     .{ .day = 1, .part1 = d1.part1, .part2 = d1.part2 },
     .{ .day = 2, .part1 = d2.part1, .part2 = d2.part2 },
     .{ .day = 3, .part1 = d3.part1, .part2 = d3.part2 },
+    .{ .day = 4, .part1 = d4.part1, .part2 = d4.part2 },
+    .{ .day = 5, .part1 = d5.part1, .part2 = d5.part2 },
 };
 
+// ./exe run <day> <part>
+// ./exe submit <day> <part>
 pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
@@ -36,9 +42,6 @@ pub fn main() !void {
         std.debug.print("Usage: {s} <day>\n", .{args[0]});
         return;
     }
-
-    // ./exe run <day> <part>
-    // ./exe submit <day> <part>
 
     const command = args[1];
     const day = std.fmt.parseInt(u8, args[2], 10) catch {
