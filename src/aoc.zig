@@ -1,5 +1,7 @@
 const std = @import("std");
 
+const CACHE_DIR = "aoc-cache";
+
 pub const AocClient = struct {
     year: u32,
     token: []const u8,
@@ -10,11 +12,7 @@ pub const AocClient = struct {
     pub fn init(allocator: std.mem.Allocator, token: []const u8, year: u32) !AocClient {
         var inputs = std.AutoArrayHashMap(u8, []const u8).init(allocator);
 
-        // try to read inputs from disk
-        const cache_path = try std.fmt.allocPrint(allocator, "inputs/{}", .{year});
-        defer allocator.free(cache_path);
-
-        const dir = try std.fs.cwd().openDir(cache_path, .{
+        const dir = try std.fs.cwd().openDir(CACHE_DIR, .{
             .iterate = true,
         });
         var walk = try dir.walk(allocator);
@@ -22,9 +20,7 @@ pub const AocClient = struct {
 
         while (try walk.next()) |entry| {
             const day = try std.fmt.parseInt(u8, entry.basename, 10);
-            const input = try std.fs.cwd().readFileAlloc(allocator, entry.path, std.math.maxInt(usize));
-
-            std.log.debug("Read input for day {} ({} bytes)\n", .{ day, input.len });
+            const input = try dir.readFileAlloc(allocator, entry.path, std.math.maxInt(usize));
 
             try inputs.put(day, input);
         }
@@ -39,25 +35,37 @@ pub const AocClient = struct {
     }
 
     pub fn deinit(self: *AocClient) !void {
-        // write inputs to disk
-        const cache_path = try std.fmt.allocPrint(self.allocator, "inputs/{}", .{self.year});
-        defer self.allocator.free(cache_path);
+        std.fs.cwd().makeDir(CACHE_DIR) catch {};
 
-        try std.fs.cwd().makeDir(cache_path);
+        const dir = try std.fs.cwd().openDir(CACHE_DIR, .{
+            .iterate = true,
+        });
 
         var iter = self.inputs.iterator();
         while (iter.next()) |entry| {
-            const path = try std.fmt.allocPrint(self.allocator, "{s}/{d}", .{ cache_path, entry.key_ptr });
+            const path = try std.fmt.allocPrint(self.allocator, "{d}", .{entry.key_ptr.*});
             defer self.allocator.free(path);
 
-            try std.fs.cwd().writeFile(.{ .sub_path = path, .contents = entry.value });
+            const data: []const u8 = entry.value_ptr.*;
+
+            try dir.writeFile(.{ .sub_path = path, .data = data });
         }
 
         self.inputs.deinit();
     }
 
-    pub fn getProblemInput(self: *@This(), year: u32, day: u8) ![]const u8 {
-        const url = try std.fmt.allocPrint(self.allocator, "https://adventofcode.com/{d}/day/{d}/input", .{ year, day });
+    pub fn getProblemInput(self: *@This(), day: u8) ![]const u8 {
+        if (self.inputs.get(day)) |input| {
+            return input;
+        } else {
+            const input = try self.fetchProblemInput(day);
+            try self.inputs.put(day, input);
+            return input;
+        }
+    }
+
+    fn fetchProblemInput(self: *@This(), day: u8) ![]const u8 {
+        const url = try std.fmt.allocPrint(self.allocator, "https://adventofcode.com/{d}/day/{d}/input", .{ self.year, day });
         defer self.allocator.free(url);
 
         const uri = try std.Uri.parse(url);
@@ -86,8 +94,6 @@ pub const AocClient = struct {
 
         var reader = request.reader();
         const body = try reader.readAllAlloc(self.allocator, std.math.maxInt(usize));
-
-        try self.inputs.put(day, body);
 
         return body;
     }
