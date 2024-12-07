@@ -1,33 +1,23 @@
-//! By convention, main.zig is where your main function lives in the case that
-//! you are building an executable. If you are making a library, the convention
-//! is to delete this file and start with root.zig instead.
 const std = @import("std");
 
+const aoc = @import("aoc.zig");
+
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const allocator = arena.allocator();
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    const token = std.process.getEnvVarOwned(allocator, "TOKEN") catch |err| {
+        std.debug.panic("TOKEN environment variable not set.\n", .{err});
+    };
 
-    try bw.flush(); // Don't forget to flush!
-}
+    var client = try aoc.AocClient.init(allocator, token, 2024);
+    defer client.deinit();
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // Try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
-}
+    const input = try client.getProblemInput(2024, 1) catch |err| {
+        std.debug.panic("Failed to get input: {}\n", .{err});
+    };
 
-test "fuzz example" {
-    // Try passing `--fuzz` to `zig build` and see if it manages to fail this test case!
-    const input_bytes = std.testing.fuzzInput(.{});
-    try std.testing.expect(!std.mem.eql(u8, "canyoufindme", input_bytes));
+    std.debug.print("Input: {}\n", .{input});
 }
