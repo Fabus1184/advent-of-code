@@ -8,7 +8,7 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !usize {
 
     var lines = std.mem.splitSequence(u8, std.mem.trimRight(u8, input, "\n"), "\n");
     while (lines.next()) |line| {
-        try g.rows.append(line);
+        try g.addRow(line);
     }
 
     const size = g.size();
@@ -42,7 +42,7 @@ pub fn part2(input: []const u8, allocator: std.mem.Allocator) !usize {
 
     var lines = std.mem.splitSequence(u8, std.mem.trimRight(u8, input, "\n"), "\n");
     while (lines.next()) |line| {
-        try g.rows.append(line);
+        try g.addRow(line);
     }
 
     const size = g.size();

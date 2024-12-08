@@ -9,6 +9,7 @@ pub const Direction = enum {
     DownLeft,
     Left,
     LeftUp,
+
     pub fn toVector(self: @This()) @Vector(2, isize) {
         return switch (self) {
             .Up => .{ 0, -1 },
@@ -19,6 +20,19 @@ pub const Direction = enum {
             .DownLeft => .{ -1, 1 },
             .Left => .{ -1, 0 },
             .LeftUp => .{ -1, -1 },
+        };
+    }
+
+    pub fn rotateRight90(self: @This()) Direction {
+        return switch (self) {
+            .Up => Direction.Right,
+            .UpRight => Direction.RightDown,
+            .Right => Direction.Down,
+            .RightDown => Direction.DownLeft,
+            .Down => Direction.Left,
+            .DownLeft => Direction.LeftUp,
+            .Left => Direction.Up,
+            .LeftUp => Direction.UpRight,
         };
     }
 };
@@ -63,14 +77,17 @@ pub fn NeighborIterator(comptime T: type) type {
 
 pub fn Grid(comptime T: type) type {
     return struct {
-        rows: std.ArrayList([]const T),
+        rows: std.ArrayList([]T),
         allocator: std.mem.Allocator,
 
         pub fn init(allocator: std.mem.Allocator) @This() {
-            return .{ .rows = std.ArrayList([]const T).init(allocator), .allocator = allocator };
+            return .{ .rows = std.ArrayList([]T).init(allocator), .allocator = allocator };
         }
 
         pub fn deinit(self: @This()) void {
+            for (self.rows.items) |row| {
+                self.allocator.free(row);
+            }
             self.rows.deinit();
         }
 
@@ -87,6 +104,12 @@ pub fn Grid(comptime T: type) type {
 
         pub fn size(self: *const @This()) @Vector(2, usize) {
             return .{ self.rows.items[0].len, self.rows.items.len };
+        }
+
+        pub fn addRow(self: *@This(), row: []const T) !void {
+            const r = try self.allocator.alloc(T, row.len);
+            @memcpy(r, row);
+            try self.rows.append(r);
         }
 
         pub fn neighbors(self: *const @This(), position: @Vector(2, isize), direction: Direction, count: usize) NeighborIterator(T) {
