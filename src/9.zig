@@ -12,28 +12,54 @@ const Input = struct {
         self.blocks.deinit();
     }
 
-    pub fn linearize(self: @This(), allocator: std.mem.Allocator) ![]?u16 {
-        var size: usize = 0;
-        for (self.blocks.items) |block| {
-            size += @intCast(block.size);
-        }
+    pub fn checksum(self: *@This()) u64 {
+        var sum: u64 = 0;
+        var i: u64 = 0;
 
-        const array = try allocator.alloc(?u16, size);
-        
-        var i: usize = 0;
         for (self.blocks.items) |block| {
-            for (0..block.size) |j| {
-                if (block.fileId) |f| {
-                    array[i + j] = f;
-                } else {
-                    array[i + j] = null;
+            if (block.fileId) |v| {
+                for (0..block.size) |j| {
+                    sum += @as(u64, i + j) * @as(u64, v);
                 }
             }
 
             i += @intCast(block.size);
         }
 
-        return array;
+        return sum;
+    }
+
+    pub fn compact(self: *@This()) !void {
+        var modified = true;
+        while (modified) {
+            modified = false;
+
+            for (0..self.blocks.items.len) |i_| {
+                const src = self.blocks.items.len - i_ - 1;
+                if (self.blocks.items[src].fileId == null) {
+                    continue;
+                }
+
+                const dest = for (0..src) |dest| {
+                    if (self.blocks.items[dest].fileId == null and self.blocks.items[dest].size >= self.blocks.items[src].size) {
+                        break dest;
+                    }
+                } else {
+                    continue;
+                };
+
+                const sizeDiff = self.blocks.items[dest].size - self.blocks.items[src].size;
+                std.mem.swap(?u16, &self.blocks.items[dest].fileId, &self.blocks.items[src].fileId);
+                self.blocks.items[dest].size -= sizeDiff;
+
+                modified = true;
+
+                if (sizeDiff > 0) {
+                    try self.blocks.insert(dest + 1, .{ .fileId = null, .size = @intCast(sizeDiff) });
+                    break;
+                }
+            }
+        }
     }
 };
 
@@ -61,32 +87,34 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
     var disk = try parseInput(input, allocator);
     defer disk.deinit();
 
-    const linear = try disk.linearize(allocator);
-    defer allocator.free(linear);
-
-    var modified = true;
-    while (modified) {
-        modified = false;
-
-        for (0..linear.len) |i| {
-            if (linear[i] == null) {
-                for (0..linear.len - i) |j| {
-                    const j_ = linear.len - j - 1;
-                    if (linear[j_] != null) {
-                        std.mem.swap(?u16, &linear[i], &linear[j_]);
-                        modified = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    var blocks = disk.blocks.items;
 
     var sum: u64 = 0;
-    for (linear, 0..) |v, i| {
-        if (v) |value| {
-            sum += @as(u64, i) * @as(u64, value);
+    var offset: u64 = 0;
+    while (blocks.len > 0) {
+        if (blocks[0].fileId) |v| {
+            sum += offset * v;            
+        } else  {
+            const i = for (0..blocks.len) |i| {
+                if (blocks[blocks.len - i - 1].fileId != null) {
+                    break blocks.len - i - 1;
+                }
+            } else break;
+
+            sum += offset * blocks[i].fileId.?;
+            
+            blocks[i].size -= 1;
+            if (blocks[i].size == 0) {
+                blocks = blocks[0..i];
+            }
         }
+        
+        blocks[0].size -= 1;
+        if (blocks[0].size == 0) {
+            blocks = blocks[1..];
+        }
+        
+        offset += 1;
     }
 
     return sum;
@@ -94,49 +122,9 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
 
 pub fn part2(input: []const u8, allocator: std.mem.Allocator) !u64 {
     var disk = try parseInput(input, allocator);
+    defer disk.deinit();
+    
+    try disk.compact();
 
-    var modified = true;
-    while (modified) {
-        modified = false;
-
-        for (0..disk.blocks.items.len) |i_| {
-            const src = disk.blocks.items.len - i_ - 1;
-            if (disk.blocks.items[src].fileId == null) {
-                continue;
-            }
-
-            const dest = for (0..src) |dest| {
-                if (disk.blocks.items[dest].fileId == null and disk.blocks.items[dest].size >= disk.blocks.items[src].size) {
-                    break dest;
-                }
-            } else {
-                continue;
-            };
-
-            const sizeDiff = disk.blocks.items[dest].size - disk.blocks.items[src].size;
-            std.mem.swap(?u16, &disk.blocks.items[dest].fileId, &disk.blocks.items[src].fileId);
-            disk.blocks.items[dest].size -= sizeDiff;
-
-            modified = true;
-
-            if (sizeDiff > 0) {
-                try disk.blocks.insert(dest + 1, .{ .fileId = null, .size = @intCast(sizeDiff) });
-                break;
-            }
-        }
-    }
-
-    var sum: u64 = 0;
-    var i: u32 = 0;
-    for (disk.blocks.items) |block| {
-        if (block.fileId) |v| {
-            for (0..block.size) |j| {
-                sum += @as(u64, i + j) * @as(u64, v);
-            }
-        }
-
-        i += @intCast(block.size);
-    }
-
-    return sum;
+    return disk.checksum();
 }
