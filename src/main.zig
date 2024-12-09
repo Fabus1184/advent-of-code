@@ -9,6 +9,8 @@ const d4 = @import("4.zig");
 const d5 = @import("5.zig");
 const d6 = @import("6.zig");
 const d7 = @import("7.zig");
+const d8 = @import("8.zig");
+const d9 = @import("9.zig");
 
 const DAYS = .{
     .{ .day = 1, .part1 = d1.part1, .part2 = d1.part2 },
@@ -18,6 +20,8 @@ const DAYS = .{
     .{ .day = 5, .part1 = d5.part1, .part2 = d5.part2 },
     .{ .day = 6, .part1 = d6.part1, .part2 = d6.part2 },
     .{ .day = 7, .part1 = d7.part1, .part2 = d7.part2 },
+    .{ .day = 8, .part1 = d8.part1, .part2 = d8.part2 },
+    .{ .day = 9, .part1 = d9.part1, .part2 = d9.part2 },
 };
 
 const ANSII_RESET = "\x1b[0m";

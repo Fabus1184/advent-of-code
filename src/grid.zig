@@ -64,7 +64,7 @@ pub fn NeighborIterator(comptime T: type) type {
 
         pub fn next(self: *@This()) ?T {
             if (self.count > 0) {
-                const t = self.grid.at(self.position);
+                const t = self.grid.get(self.position);
                 self.position += self.direction.toVector();
                 self.count -= 1;
                 return t;
@@ -91,7 +91,7 @@ pub fn Grid(comptime T: type) type {
             self.rows.deinit();
         }
 
-        pub fn at(self: *const @This(), position: @Vector(2, isize)) ?T {
+        pub fn get(self: *const @This(), position: @Vector(2, isize)) ?T {
             if (position[1] < 0 or position[1] >= @as(isize, @intCast(self.rows.items.len))) {
                 return null;
             }
@@ -100,6 +100,17 @@ pub fn Grid(comptime T: type) type {
                 return null;
             }
             return row[@intCast(position[0])];
+        }
+
+        pub fn at(self: *@This(), position: @Vector(2, isize)) ?*T {
+            if (position[1] < 0 or position[1] >= @as(isize, @intCast(self.rows.items.len))) {
+                return null;
+            }
+            const row = self.rows.items[@intCast(position[1])];
+            if (position[0] < 0 or position[0] >= @as(isize, @intCast(row.len))) {
+                return null;
+            }
+            return &row[@intCast(position[0])];
         }
 
         pub fn size(self: *const @This()) @Vector(2, usize) {

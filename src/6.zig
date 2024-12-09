@@ -61,7 +61,7 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !usize {
     while (true) {
         try visited.put(i.guard, .{});
 
-        const next = i.grid.at(i.guard + direction.toVector()) orelse break;
+        const next = i.grid.get(i.guard + direction.toVector()) orelse break;
 
         if (next) {
             direction = direction.rotateRight90();
@@ -105,7 +105,7 @@ fn loops(input: *Input) !bool {
     while (!visited.contains(.{ input.guard, direction })) {
         try visited.put(.{ input.guard, direction }, .{});
 
-        const next = input.grid.at(input.guard + direction.toVector()) orelse break;
+        const next = input.grid.get(input.guard + direction.toVector()) orelse break;
 
         if (next) {
             direction = direction.rotateRight90();
