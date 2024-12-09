@@ -15,7 +15,6 @@ const Input = struct {
 
 fn parseInput(input: []const u8, allocator: std.mem.Allocator) !Input {
     var blocks = std.ArrayList(Block).init(allocator);
-    blocks.ensureTotalCapacity(@intCast(input.len / 2));
 
     for (std.mem.trimRight(u8, input, "\n"), 0..) |c, i| {
         const n = try std.fmt.parseInt(u16, &[_]u8{c}, 10);
