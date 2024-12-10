@@ -75,6 +75,29 @@ pub fn NeighborIterator(comptime T: type) type {
     };
 }
 
+pub fn PositionIterator(comptime T: type) type {
+    return struct {
+        grid: *const Grid(T),
+        position: @Vector(2, isize),
+
+        pub fn next(self: *@This()) ?struct { position: @Vector(2, isize), element: T } {
+            if (self.grid.get(self.position)) |t| {
+                const pos = self.position;
+
+                self.position[0] += 1;
+                if (self.position[0] >= @as(isize, @intCast(self.grid.rows.items[0].len))) {
+                    self.position[0] = 0;
+                    self.position[1] += 1;
+                }
+
+                return .{ .position = pos, .element = t };
+            } else {
+                return null;
+            }
+        }
+    };
+}
+
 pub fn Grid(comptime T: type) type {
     return struct {
         rows: std.ArrayList([]T),
@@ -89,6 +112,13 @@ pub fn Grid(comptime T: type) type {
                 self.allocator.free(row);
             }
             self.rows.deinit();
+        }
+
+        pub fn clone(self: *const @This()) !@This() {
+            return .{
+                .rows = try self.rows.clone(),
+                .allocator = self.allocator,
+            };
         }
 
         pub fn get(self: *const @This(), position: @Vector(2, isize)) ?T {
@@ -123,13 +153,62 @@ pub fn Grid(comptime T: type) type {
             try self.rows.append(r);
         }
 
-        pub fn neighbors(self: *const @This(), position: @Vector(2, isize), direction: Direction, count: usize) NeighborIterator(T) {
+        pub fn neighbor(self: *const @This(), position: @Vector(2, isize), direction: Direction) ?T {
+            return self.get(position + direction.toVector());
+        }
+
+        pub fn neighborsIn(self: *const @This(), position: @Vector(2, isize), direction: Direction, count: usize) NeighborIterator(T) {
             return .{
                 .grid = self,
                 .position = position,
                 .direction = direction,
                 .count = count,
             };
+        }
+
+        pub fn neighbors4(self: *const @This(), position: @Vector(2, isize)) [4]?T {
+            var neighbors: [4]?T = undefined;
+
+            for (Directions4, 0..) |direction, i| {
+                neighbors[i] = self.get(position + direction.toVector());
+            }
+
+            return neighbors;
+        }
+
+        pub fn elements(self: *const @This()) PositionIterator(T) {
+            return .{ .grid = self, .position = .{ 0, 0 } };
+        }
+
+        pub fn printDecimal(self: *const @This()) void {
+            for (self.rows.items) |row| {
+                for (row) |item| {
+                    std.debug.print("{d}", .{item});
+                }
+                std.debug.print("\n", .{});
+            }
+        }
+
+        pub fn printCustom(self: *const @This(), comptime formatString: []const u8) void {
+            for (self.rows.items) |row| {
+                for (row) |item| {
+                    std.debug.print(formatString, .{item});
+                }
+                std.debug.print("\n", .{});
+            }
+        }
+
+        pub fn printOptionalAny(self: *const @This(), comptime formatStringPresent: []const u8, comptime formatStringAbsent: []const u8) void {
+            for (self.rows.items) |row| {
+                for (row) |item| {
+                    if (item) |value| {
+                        std.debug.print(formatStringPresent, .{value});
+                    } else {
+                        std.debug.print(formatStringAbsent, .{});
+                    }
+                }
+                std.debug.print("\n", .{});
+            }
         }
     };
 }

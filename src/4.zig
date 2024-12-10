@@ -18,7 +18,7 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !usize {
     for (0..size[0]) |x| {
         for (0..size[1]) |y| {
             for (grid.Directions8) |d| {
-                var it = g.neighbors(.{ @intCast(x), @intCast(y) }, d, 4);
+                var it = g.neighborsIn(.{ @intCast(x), @intCast(y) }, d, 4);
                 const buffer: [4]u8 = [_]u8{
                     it.next() orelse continue,
                     it.next() orelse continue,
@@ -51,14 +51,14 @@ pub fn part2(input: []const u8, allocator: std.mem.Allocator) !usize {
 
     for (0..size[0]) |x| {
         for (0..size[1]) |y| {
-            var it1 = g.neighbors(.{ @intCast(x), @intCast(y) }, .RightDown, 3);
+            var it1 = g.neighborsIn(.{ @intCast(x), @intCast(y) }, .RightDown, 3);
             const str1: [3]u8 = [_]u8{
                 it1.next() orelse continue,
                 it1.next() orelse continue,
                 it1.next() orelse continue,
             };
 
-            var it2 = g.neighbors(.{ @intCast(x + 2), @intCast(y) }, .DownLeft, 3);
+            var it2 = g.neighborsIn(.{ @intCast(x + 2), @intCast(y) }, .DownLeft, 3);
             const str2: [3]u8 = [_]u8{
                 it2.next() orelse continue,
                 it2.next() orelse continue,

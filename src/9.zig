@@ -43,8 +43,8 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
     var offset: u64 = 0;
     while (blocks.len > 0) {
         if (blocks[0].fileId) |v| {
-            sum += offset * v;            
-        } else  {
+            sum += offset * v;
+        } else {
             const i = for (0..blocks.len) |i| {
                 if (blocks[blocks.len - i - 1].fileId != null) {
                     break blocks.len - i - 1;
@@ -52,18 +52,18 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
             } else break;
 
             sum += offset * blocks[i].fileId.?;
-            
+
             blocks[i].size -= 1;
             if (blocks[i].size == 0) {
                 blocks = blocks[0..i];
             }
         }
-        
+
         blocks[0].size -= 1;
         if (blocks[0].size == 0) {
             blocks = blocks[1..];
         }
-        
+
         offset += 1;
     }
 
@@ -73,7 +73,7 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
 pub fn part2(input: []const u8, allocator: std.mem.Allocator) !u64 {
     var disk = try parseInput(input, allocator);
     defer disk.deinit();
-    
+
     var modified = true;
     while (modified) {
         modified = false;

@@ -11,6 +11,7 @@ const d6 = @import("6.zig");
 const d7 = @import("7.zig");
 const d8 = @import("8.zig");
 const d9 = @import("9.zig");
+const d10 = @import("10.zig");
 
 const DAYS = .{
     .{ .day = 1, .part1 = d1.part1, .part2 = d1.part2 },
@@ -22,7 +23,33 @@ const DAYS = .{
     .{ .day = 7, .part1 = d7.part1, .part2 = d7.part2 },
     .{ .day = 8, .part1 = d8.part1, .part2 = d8.part2 },
     .{ .day = 9, .part1 = d9.part1, .part2 = d9.part2 },
+    .{ .day = 10, .part1 = d10.part1, .part2 = d10.part2 },
 };
+
+test "test" {
+    const allocator = std.testing.allocator;
+
+    const token = std.process.getEnvVarOwned(allocator, "TOKEN") catch {
+        std.debug.panic("TOKEN environment variable not set\n", .{});
+    };
+
+    var client = try aoc.AocClient.init(allocator, token, 2024);
+    defer {
+        client.deinit() catch |err| {
+            std.debug.panic("Failed to deinit client: {any}\n", .{err});
+        };
+    }
+
+    inline for (DAYS) |e| {
+        const input = try client.getProblemInput(e.day);
+
+        const part1 = try e.part1(input, allocator);
+        const part2 = try e.part2(input, allocator);
+
+        std.debug.print("Day {d} Part 1: {d}\n", .{ e.day, part1 });
+        std.debug.print("Day {d} Part 2: {d}\n", .{ e.day, part2 });
+    }
+}
 
 const ANSII_RESET = "\x1b[0m";
 const ANSII_CURSIVE = "\x1b[3m";
