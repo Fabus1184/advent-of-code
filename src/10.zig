@@ -47,7 +47,7 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
         if (e.element == 0) {
             var list = std.ArrayList(@Vector(2, isize)).init(allocator);
             try ways(&g, e.position, &list);
-        
+
             var set = try std.DynamicBitSet.initEmpty(allocator, g.size()[0] * g.size()[1]);
             defer set.deinit();
 
@@ -57,7 +57,6 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
 
             sum += set.count();
         }
-    
     }
 
     return sum;
