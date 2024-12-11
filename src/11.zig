@@ -20,8 +20,10 @@ fn iterate(numbers: []const u64, allocator: std.mem.Allocator, limit: usize) !u6
         (try counts.getOrPutValue(n, 0)).value_ptr.* += 1;
     }
 
+    var new = std.AutoArrayHashMap(u64, u64).init(allocator);
+    defer new.deinit();
+    
     for (0..limit) |_| {
-        var new = std.AutoArrayHashMap(u64, u64).init(allocator);
 
         var it = counts.iterator();
         while (it.next()) |e| {
@@ -31,11 +33,9 @@ fn iterate(numbers: []const u64, allocator: std.mem.Allocator, limit: usize) !u6
             if (key == 0) {
                 (try new.getOrPutValue(1, 0)).value_ptr.* += value;
             } else if ((std.math.log10_int(key) + 1) % 2 == 0) {
-                var buf: [32]u8 = undefined;
-                const str = try std.fmt.bufPrint(&buf, "{d}", .{key});
-                const half = str.len / 2;
-                const first = try std.fmt.parseInt(u64, str[0..half], 10);
-                const second = try std.fmt.parseInt(u64, str[half..], 10);
+                const half = (std.math.log10_int(key) + 1) / 2;
+                const first = key / std.math.pow(u64, 10, half);
+                const second = key % std.math.pow(u64, 10, half);
 
                 (try new.getOrPutValue(first, 0)).value_ptr.* += value;
                 (try new.getOrPutValue(second, 0)).value_ptr.* += value;
@@ -44,8 +44,9 @@ fn iterate(numbers: []const u64, allocator: std.mem.Allocator, limit: usize) !u6
             }
         }
 
-        counts.deinit();
-        counts = new;
+        std.mem.swap(std.AutoArrayHashMap(u64, u64), &counts, &new);
+
+        new.clearRetainingCapacity();
     }
 
     var sum: u64 = 0;
