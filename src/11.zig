@@ -13,18 +13,17 @@ fn parseInput(input: []const u8, allocator: std.mem.Allocator) !std.ArrayList(u6
 }
 
 fn iterate(numbers: []const u64, allocator: std.mem.Allocator, limit: usize) !u64 {
-    var counts = std.AutoArrayHashMap(u64, u64).init(allocator);
+    var counts = std.AutoHashMap(u64, u64).init(allocator);
     defer counts.deinit();
 
     for (numbers) |n| {
         (try counts.getOrPutValue(n, 0)).value_ptr.* += 1;
     }
 
-    var new = std.AutoArrayHashMap(u64, u64).init(allocator);
+    var new = std.AutoHashMap(u64, u64).init(allocator);
     defer new.deinit();
-    
-    for (0..limit) |_| {
 
+    for (0..limit) |_| {
         var it = counts.iterator();
         while (it.next()) |e| {
             const value = e.value_ptr.*;
@@ -44,15 +43,16 @@ fn iterate(numbers: []const u64, allocator: std.mem.Allocator, limit: usize) !u6
             }
         }
 
-        std.mem.swap(std.AutoArrayHashMap(u64, u64), &counts, &new);
+        std.mem.swap(std.AutoHashMap(u64, u64), &counts, &new);
 
         new.clearRetainingCapacity();
     }
 
     var sum: u64 = 0;
 
-    for (counts.values()) |v| {
-        sum += v;
+    var it = counts.valueIterator();
+    while (it.next()) |v| {
+        sum += v.*;
     }
 
     return sum;
