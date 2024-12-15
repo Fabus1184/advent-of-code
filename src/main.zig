@@ -15,6 +15,7 @@ const d10 = @import("10.zig");
 const d11 = @import("11.zig");
 const d12 = @import("12.zig");
 const d13 = @import("13.zig");
+const d14 = @import("14.zig");
 
 const DAYS = .{
     .{ .day = 1, .part1 = d1.part1, .part2 = d1.part2 },
@@ -30,6 +31,7 @@ const DAYS = .{
     .{ .day = 11, .part1 = d11.part1, .part2 = d11.part2 },
     .{ .day = 12, .part1 = d12.part1, .part2 = d12.part2 },
     .{ .day = 13, .part1 = d13.part1, .part2 = d13.part2 },
+    .{ .day = 14, .part1 = d14.part1, .part2 = d14.part2 },
 };
 
 test "test" {
