@@ -69,37 +69,6 @@ pub fn part1(input: []const u8, allocator: std.mem.Allocator) !u64 {
     return q1 * q2 * q3 * q4;
 }
 
-fn SliceReader(comptime T: type) type {
-    return struct {
-        slice: []T,
-        index: usize,
-
-        pub fn readAll(self: *const @This(), buf: []u8) !usize {
-            var buffer = buf;
-
-            const size = @sizeOf(T);
-            if (buffer.len < size) {
-                return error.@"Buffer too small";
-            }
-
-            var written: usize = 0;
-            var index = self.index;
-
-            while (buffer.len >= size and index < self.slice.len) : (buffer = buffer[size..]) {
-                const item = self.slice[index];
-                const bytes = std.mem.toBytes(item);
-
-                @memcpy(buffer[0..size], &bytes);
-
-                index += 1;
-                written += size;
-            }
-
-            return written;
-        }
-    };
-}
-
 pub fn part2(input: []const u8, allocator: std.mem.Allocator) !usize {
     const robots = try parseInput(input, allocator);
     defer allocator.free(robots);
