@@ -16,6 +16,8 @@ const d11 = @import("11.zig");
 const d12 = @import("12.zig");
 const d13 = @import("13.zig");
 const d14 = @import("14.zig");
+const d15 = @import("15.zig");
+const d16 = @import("16.zig");
 
 const DAYS = .{
     .{ .day = 1, .part1 = d1.part1, .part2 = d1.part2 },
@@ -32,6 +34,8 @@ const DAYS = .{
     .{ .day = 12, .part1 = d12.part1, .part2 = d12.part2 },
     .{ .day = 13, .part1 = d13.part1, .part2 = d13.part2 },
     .{ .day = 14, .part1 = d14.part1, .part2 = d14.part2 },
+    .{ .day = 15, .part1 = d15.part1, .part2 = d15.part2 },
+    .{ .day = 16, .part1 = d16.part1, .part2 = d16.part2 },
 };
 
 test "test" {
@@ -104,24 +108,26 @@ pub fn main() !void {
     if (std.mem.eql(u8, command, "run")) {
         const now = std.time.microTimestamp();
 
-        const answer = inline for (DAYS) |d| {
+        inline for (DAYS) |d| {
             if (d.day == day) {
-                if (part == 1) {
-                    break try d.part1(input, allocator);
-                } else if (part == 2) {
-                    break try d.part2(input, allocator);
-                } else {
+                const answer = if (part == 1)
+                    try d.part1(input, allocator)
+                else if (part == 2)
+                    try d.part2(input, allocator)
+                else {
                     std.debug.panic("Invalid part: {d}\n", .{part});
-                }
+                };
+
+                std.debug.print("🎄 {s}Day {d} Part {d}{s}: {s}{d}{s}\n", .{ ANSII_CURSIVE, day, part, ANSII_RESET, ANSII_BOLD ++ ANSII_GREEN, answer, ANSII_RESET });
+
+                const elapsed = std.time.microTimestamp() - now;
+                std.debug.print("took: {d:.3}ms\n", .{@as(f32, @floatFromInt(elapsed)) / 1000.0});
+
+                break;
             }
         } else {
             std.debug.panic("Unknown day: {d}\n", .{day});
-        };
-
-        std.debug.print("🎄 {s}Day {d} Part {d}{s}: {s}{d}{s}\n", .{ ANSII_CURSIVE, day, part, ANSII_RESET, ANSII_BOLD ++ ANSII_GREEN, answer, ANSII_RESET });
-
-        const elapsed = std.time.microTimestamp() - now;
-        std.debug.print("took: {d:.3}ms\n", .{@as(f32, @floatFromInt(elapsed)) / 1000.0});
+        }
     } else if (std.mem.eql(u8, command, "submit")) {
         std.debug.panic("Not implemented\n", .{});
     } else {

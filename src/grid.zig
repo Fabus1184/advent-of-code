@@ -121,6 +121,19 @@ pub fn Grid(comptime T: type) type {
             };
         }
 
+        pub fn fill(self: *@This(), rows: usize, cols: usize, value: T) !void {
+            self.rows.clearRetainingCapacity();
+
+            for (0..rows) |_| {
+                const row = try self.allocator.alloc(T, cols);
+                for (0..cols) |i| {
+                    row[i] = value;
+                }
+
+                try self.rows.append(row);
+            }
+        }
+
         pub fn get(self: *const @This(), position: @Vector(2, isize)) ?T {
             if (position[1] < 0 or position[1] >= @as(isize, @intCast(self.rows.items.len))) {
                 return null;
@@ -184,6 +197,19 @@ pub fn Grid(comptime T: type) type {
             for (self.rows.items) |row| {
                 for (row) |item| {
                     std.debug.print("{d}", .{item});
+                }
+                std.debug.print("\n", .{});
+            }
+        }
+
+        pub fn printBool(self: *const @This(), comptime trueString: []const u8, comptime falseString: []const u8) void {
+            for (self.rows.items) |row| {
+                for (row) |item| {
+                    if (item) {
+                        std.debug.print(trueString, .{});
+                    } else {
+                        std.debug.print(falseString, .{});
+                    }
                 }
                 std.debug.print("\n", .{});
             }
