@@ -35,6 +35,19 @@ pub const Direction = enum {
             .LeftUp => Direction.UpRight,
         };
     }
+
+    pub fn invert(self: @This()) Direction {
+        return switch (self) {
+            .Up => Direction.Down,
+            .UpRight => Direction.DownLeft,
+            .Right => Direction.Left,
+            .RightDown => Direction.LeftUp,
+            .Down => Direction.Up,
+            .DownLeft => Direction.UpRight,
+            .Left => Direction.Right,
+            .LeftUp => Direction.RightDown,
+        };
+    }
 };
 
 pub const Directions8 = [_]Direction{
@@ -164,6 +177,14 @@ pub fn Grid(comptime T: type) type {
             const r = try self.allocator.alloc(T, row.len);
             @memcpy(r, row);
             try self.rows.append(r);
+        }
+
+        pub fn unindex(self: *const @This(), i: usize) @Vector(2, isize) {
+            return .{ @intCast(i % self.rows.items[0].len), @intCast(i / self.rows.items[0].len) };
+        }
+
+        pub fn index(self: *const @This(), position: @Vector(2, isize)) usize {
+            return @as(usize, @intCast(position[1])) * self.rows.items[0].len + @as(usize, @intCast(position[0]));
         }
 
         pub fn neighbor(self: *const @This(), position: @Vector(2, isize), direction: Direction) ?T {
